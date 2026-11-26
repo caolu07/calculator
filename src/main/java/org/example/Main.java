@@ -1,8 +1,11 @@
 package org.example;
 
+import javafx.animation.Interpolator;
+import javafx.animation.ScaleTransition;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Cursor;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
@@ -12,6 +15,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.RowConstraints;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 public class Main {
 
@@ -138,7 +142,37 @@ public class Main {
             button.setMaxHeight(Double.MAX_VALUE);
             button.setFocusTraversable(false);
             button.setStyle(style);
+            button.setCursor(Cursor.HAND);
+
+            // 鼠标悬停：外发光 + 轻微放大，突出当前按钮
+            button.setOnMouseEntered(event -> {
+                button.setStyle(style + glowStyleFor(style));
+                button.toFront();   // 让发光效果盖在相邻按钮之上，不会被遮住
+                animateScale(button, 1.07);
+            });
+            button.setOnMouseExited(event -> {
+                button.setStyle(style);
+                animateScale(button, 1.0);
+            });
             return button;
+        }
+
+        /** 根据按键类型返回悬停时的外发光样式：归零键为红色光晕，其余为蓝色光晕。 */
+        private String glowStyleFor(String baseStyle) {
+            String glowColor = CLEAR_BUTTON_STYLE.equals(baseStyle)
+                    ? "rgba(198, 40, 40, 0.9)"
+                    : "rgba(37, 99, 235, 0.9)";
+            return "-fx-effect: dropshadow(gaussian, " + glowColor + ", 26, 0.45, 0, 0);";
+        }
+
+        /** 平滑地把按钮缩放到指定倍率。 */
+        private void animateScale(Button button, double targetScale) {
+            ScaleTransition transition =
+                    new ScaleTransition(Duration.millis(120), button);
+            transition.setToX(targetScale);
+            transition.setToY(targetScale);
+            transition.setInterpolator(Interpolator.EASE_BOTH);
+            transition.play();
         }
 
         private boolean isOperator(String key) {
